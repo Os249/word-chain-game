@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Chain Challenge</title>
+    <style>
+        :root {
+            --primary: #5e60ce;
+            --primary-light: #6930c3;
+            --secondary: #48bfe3;
+            --secondary-light: #64dfdf;
+            --background: #f8f9fa;
+            --card: #ffffff;
+            --text: #212529;
+            --text-light: #6c757d;
+            --success: #20c997;
+            --danger: #e63946;
+            --warning: #fca311;
+            --overlay: rgba(0, 0, 0, 0.7);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--card);
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            width: 95%;
+            max-width: 800px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1, h2, h3 {
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Game setup styling */
+        .setup-area {
+            transition: all 0.5s ease;
+        }
+
+        .player-input {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .players-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .players {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            min-height: 50px;
+        }
+
+        .player {
+            background-color: var(--secondary-light);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .player.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: pulse 1.5s infinite;
+        }
+
+        .player .remove-btn {
+            background-color: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            opacity: 0.7;
+        }
+
+        .player .remove-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .player .score {
+            background-color: rgba(255, 255, 255, 0.3);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+
+        /* Game area styling */
+        .game-area {
+            display: none;
+            transition: all 0.5s ease;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .round-info {
+            background-color: var(--primary-light);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .timer {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background-color: var(--primary);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .timer.warning {
+            background-color: var(--warning);
+            animation: pulse 1s infinite;
+        }
+
+        .timer.danger {
+            background-color: var(--danger);
+            animation: pulse 0.5s infinite;
+        }
+
+        .word-chain {
+            background-color: rgba(94, 96, 206, 0.1);
+            border-radius: 12px;
+            min-height: 180px;
+            padding: 20px;
+            margin-bottom: 25px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .word {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 10px 18px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+            animation: pop 0.4s ease-out;
+            position: relative;
+        }
+
+        .word:last-child {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .word:last-child::after {
+            content: '⭐';
+            position: absolute;
+            top: -10px;
+            right: -5px;
+            font-size: 14px;
+        }
+
+        .word-input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        /* Game options and extras */
+        .game-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+            margin-bottom: 30px;
+        }
+
+        .option-card {
+            background-color: var(--background);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            width: 170px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        .option-title {
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+
+        .option-content {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Rules styling */
+        .rules {
+            background-color: rgba(94, 96, 206, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .rules h3 {
+            text-align: left;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rules h3::before {
+            content: "📜";
+        }
+
+        .rules ol {
+            padding-left: 25px;
+        }
+
+        .rules li {
+            margin-bottom: 8px;
+        }
+
+        /* Input and button styling */
+        input {
+            padding: 12px 20px;
+            border: 2px solid var(--primary-light);
+            border-radius: 30px;
+            font-size: 1rem;
+            width: 100%;
+            max-width: 300px;
+            transition: all 0.2s;
+            outline: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(94, 96, 206, 0.3);
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: linear-gradient(135deg, #adb5bd, #ced4da);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        button.btn-success {
+            background: linear-gradient(135deg, var(--success), #12b886);
+        }
+
+        button.btn-danger {
+            background: linear-gradient(135deg, var(--danger), #dc2f02);
+        }
+
+        button.btn-warning {
+            background: linear-gradient(135deg, var(--warning), #fcbf49);
+            color: var(--text);
+        }
+
+        /* Game results */
+        .game-results {
+            display: none;
+            text-align: center;
+        }
+
+        .result-header {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: var(--primary);
+        }
+
+        .winner {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: rgba(94, 96, 206, 0.1);
+            border-radius: 12px;
+            animation: celebrate 1.5s infinite;
+        }
+
+        .scoreboard {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .scoreboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: var(--background);
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .scoreboard-item.winner {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: white;
+            animation: none;
+        }
+
+        .medal {
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
+
+        /* Theme switcher */
+        .theme-switcher {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: var(--background);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+        }
+
+        .theme-switcher:hover {
+            transform: rotate(30deg);
+        }
+
+        /* Hint system */
+        .hint-container {
+            margin-top: 15px;
+            display: none;
+        }
+
+        .hint {
+            background-color: rgba(252, 163, 17, 0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-style: italic;
+            text-align: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Voting overlay styles */
+        .voting-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--overlay);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .voting-card {
+            background-color: var(--card);
+            border-radius: 16px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .voting-card h3 {
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        .challenge-words {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .challenge-words .arrow {
+            font-size: 24px;
+            color: var(--text-light);
+        }
+
+        .challenge-words .word.contested {
+            background: linear-gradient(135deg, var(--warning), var(--danger));
+            transform: scale(1.1);
+        }
+
+        .vote-question {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        .voting-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .vote-btn {
+            padding: 10px 20px;
+            min-width: 120px;
+        }
+
+        .hint-players-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 15px 0;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .hint-player-option {
+            background-color: var(--background);
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .hint-player-option:hover {
+            background-color: var(--secondary-light);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Progress bar */
+        .progress-container {
+            width: 100%;
+            background-color: #e9ecef;
+            border-radius: 8px;
+            height: 10px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Confetti animation */
+        .confetti-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            overflow: hidden;
+            display: none;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #5e60ce;
+            opacity: 0.8;
+            animation: confetti-fall 4s linear infinite;
+        }
+
+        /* Animations */
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(94, 96, 206, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(94, 96, 206, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(94, 96, 206, 0); }
+        }
+
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(1000px) rotate(720deg); opacity: 0; }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .word {
+                font-size: 0.9rem;
+                padding: 8px 14px;
+            }
+            
+            .timer {
+                font-size: 1.2rem;
+            }
+            
+            button {
+                padding: 10px 18px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Dark mode */
+        .dark-mode {
+            --primary: #9d4edd;
+            --primary-light: #c77dff;
+            --secondary: #5390d9;
+            --secondary-light: #56cfe1;
+            --background: #1a1a2e;
+            --card: #16213e;
+            --text: #e9ecef;
+            --text-light: #adb5bd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="theme-switcher" id="theme-switcher">🌙</div>
+        <h1>Word Chain Challenge</h1>
+        
+        <div id="setup-area" class="setup-area">
+            <h2>Add Players</h2>
+            <div class="player-input">
+                <input type="text" id="player-name" placeholder="Enter player name" maxlength="15">
+                <button id="add-player">Add Player</button>
+            </div>
+            
+            <div class="players-container">
+                <div class="players" id="player-list"></div>
+            </div>
+            
+            <div class="game-options">
+                <div class="option-card">
+                    <div class="option-title">Time Limit</div>
+                    <div class="option-content">
+                        <select id="time-limit">
+                            <option value="20">20 seconds</option>
+                            <option value="30" selected>30 seconds</option>
+                            <option value="45">45 seconds</option>
+                            <option value="60">60 seconds</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="option-card">
+                    <div class="option-title">Game Rounds</div>
+                    <div class="option-content">
+                        <select id="game-rounds">
+                            <option value="3">3 rounds</option>
+                            <option value="5" selected>5 rounds</option>
+                            <option value="7">7 rounds</option>
+                            <option value="10">10 rounds</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="option-card">
+                    <div class="option-title">Hint System</div>
+                    <div class="option-content">
+                        <input type="checkbox" id="hint-system" checked>
+                        <label for="hint-system">Enable hints</label>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="start-game" disabled>Start Game</button>
+            
+            <div class="rules">
+                <h3>How to Play</h3>
+                <ol>
+                    <li>Add all players who want to join (minimum 2).</li>
+                    <li>Each round starts with a random word; starting player rotates.</li>
+                    <li>Players take turns adding words related in meaning to the previous word.</li>
+                    <li>You have a limited time to submit a word (press Enter or Submit).</li>
+                    <li>Challenge a word if you think it’s not related—all players vote.</li>
+                    <li>Challenger auto-votes Reject; challenged player auto-votes Accept.</li>
+                    <li>If majority agrees, points are doubled (-2 or -4); tie keeps word, no penalty to challenger.</li>
+                    <li>Request a hint if you're stuck (needs 3+ players).</li>
+                    <li>Pass your turn if you can't think of a word (-1 point).</li>
+                    <li>Scores can go negative; highest score after all rounds wins!</li>
+                </ol>
+            </div>
+        </div>
+
+        <div id="game-area" class="game-area">
+            <div class="game-header">
+                <div class="round-info" id="round-info">Round 1 of 5</div>
+                <div class="timer" id="timer"><span id="timer-icon">⏱️</span> <span id="timer-value">30</span>s</div>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            
+            <div class="players" id="game-players"></div>
+            
+            <div class="word-chain" id="word-chain"></div>
+            
+            <div class="word-input-container">
+                <input type="text" id="word-input" placeholder="Enter a related word..." maxlength="25">
+                <button id="submit-word" class="btn-success">Submit</button>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="challenge-btn" class="btn-danger">Challenge Word</button>
+                <button id="hint-btn" class="btn-warning">Get Hint</button>
+                <button id="pass-btn">Pass Turn (-1 pt)</button>
+            </div>
+            
+            <div class="hint-container" id="hint-container">
+                <div class="hint" id="hint-text"></div>
+            </div>
+        </div>
+        
+        <div id="game-results" class="game-results">
+            <h2 class="result-header">Game Over!</h2>
+            <div class="winner" id="winner-display"></div>
+            
+            <div class="scoreboard" id="final-scoreboard"></div>
+            
+            <button id="play-again-btn" class="btn-success">Play Again</button>
+        </div>
+        
+        <div class="confetti-container" id="confetti-container"></div>
+    </div>
+
+    <script>
+    // Error handling
+    window.addEventListener('error', (event) => {
+        console.error('Uncaught error:', event.error);
+    });
+
+    // DOM Elements
+    const elements = {
+        setupArea: document.getElementById('setup-area'),
+        gameArea: document.getElementById('game-area'),
+        gameResults: document.getElementById('game-results'),
+        playerNameInput: document.getElementById('player-name'),
+        addPlayerBtn: document.getElementById('add-player'),
+        playerList: document.getElementById('player-list'),
+        startGameBtn: document.getElementById('start-game'),
+        gamePlayers: document.getElementById('game-players'),
+        wordChain: document.getElementById('word-chain'),
+        wordInput: document.getElementById('word-input'),
+        submitWordBtn: document.getElementById('submit-word'),
+        challengeBtn: document.getElementById('challenge-btn'),
+        hintBtn: document.getElementById('hint-btn'),
+        passBtn: document.getElementById('pass-btn'),
+        timerDisplay: document.getElementById('timer'),
+        timerValue: document.getElementById('timer-value'),
+        roundInfo: document.getElementById('round-info'),
+        progressBar: document.getElementById('progress-bar'),
+        hintContainer: document.getElementById('hint-container'),
+        hintText: document.getElementById('hint-text'),
+        winnerDisplay: document.getElementById('winner-display'),
+        finalScoreboard: document.getElementById('final-scoreboard'),
+        playAgainBtn: document.getElementById('play-again-btn'),
+        themeSwitcher: document.getElementById('theme-switcher'),
+        confettiContainer: document.getElementById('confetti-container')
+    };
+
+    // Game State
+    const gameState = {
+        players: [],
+        currentPlayerIndex: 0,
+        wordChain: [],
+        challengeInProgress: false,
+        hintInProgress: false,
+        round: 1,
+        maxRounds: 5,
+        timeLimit: 30,
+        timeRemaining: 30,
+        timerInterval: null,
+        hintsEnabled: true,
+        votes: {}, // Store votes for challenge
+        startingPlayerOffset: 0 // Track rotation of starting player
+    };
+
+    // Starter words
+    const starterWords = [
+        'apple', 'beach', 'castle', 'diamond', 'elephant', 'forest', 'guitar', 
+        'hospital', 'island', 'jungle', 'kitchen', 'lightning', 'mountain', 
+        'notebook', 'ocean', 'planet', 'rainbow', 'sunset', 'umbrella', 'volcano', 
+        'window', 'xylophone', 'yellow', 'zebra', 'adventure', 'butterfly', 
+        'chocolate', 'dinosaur', 'firework', 'galaxy'
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initialize game options
+        gameState.timeLimit = parseInt(document.getElementById('time-limit').value);
+        gameState.maxRounds = parseInt(document.getElementById('game-rounds').value);
+        gameState.hintsEnabled = document.getElementById('hint-system').checked;
+
+        // Event Listeners
+        elements.addPlayerBtn.addEventListener('click', addPlayer);
+        elements.playerNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addPlayer();
+                elements.playerNameInput.focus();
+            }
+        });
+        elements.startGameBtn.addEventListener('click', startGame);
+        elements.submitWordBtn.addEventListener('click', submitWord);
+        elements.wordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitWord();
+            }
+        });
+        elements.challengeBtn.addEventListener('click', challengeWord);
+        elements.hintBtn.addEventListener('click', getHint);
+        elements.passBtn.addEventListener('click', passTurn);
+        elements.playAgainBtn.addEventListener('click', resetGame);
+        elements.themeSwitcher.addEventListener('click', toggleTheme);
+
+        document.getElementById('time-limit').addEventListener('change', (e) => {
+            gameState.timeLimit = parseInt(e.target.value);
+        });
+        document.getElementById('game-rounds').addEventListener('change', (e) => {
+            gameState.maxRounds = parseInt(e.target.value);
+        });
+        document.getElementById('hint-system').addEventListener('change', (e) => {
+            gameState.hintsEnabled = e.target.checked;
+        });
+
+        elements.startGameBtn.disabled = true;
+    });
+
+    // Reset game state
+    function resetGameState() {
+        gameState.players = [];
+        gameState.currentPlayerIndex = 0;
+        gameState.wordChain = [];
+        gameState.challengeInProgress = false;
+        gameState.hintInProgress = false;
+        gameState.round = 1;
+        gameState.timeRemaining = gameState.timeLimit;
+        gameState.votes = {};
+        gameState.startingPlayerOffset = 0;
+        clearInterval(gameState.timerInterval);
+    }
+
+    // Update game display
+    function updateGameDisplay() {
+        const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+        elements.roundInfo.textContent = `Round ${gameState.round} of ${gameState.maxRounds}`;
+        elements.gamePlayers.innerHTML = gameState.players.map((player, index) => `
+            <div class="player${index === gameState.currentPlayerIndex ? ' active' : ''}">
+                ${player.name} <span class="score">${player.score}</span>
+            </div>
+        `).join('');
+        elements.wordChain.innerHTML = gameState.wordChain.map(word => `
+            <div class="word">${word}</div>
+        `).join('');
+        elements.wordInput.placeholder = `${currentPlayer.name}, enter a word related to '${gameState.wordChain[gameState.wordChain.length - 1] || 'anything'}'`;
+        elements.challengeBtn.disabled = gameState.wordChain.length < 2 || gameState.challengeInProgress;
+        elements.hintBtn.disabled = !gameState.hintsEnabled || gameState.players.length < 3 || gameState.hintInProgress;
+    }
+
+    // Start timer
+    function startTimer() {
+        clearInterval(gameState.timerInterval);
+        gameState.timeRemaining = gameState.timeLimit;
+        elements.timerValue.textContent = gameState.timeRemaining;
+        elements.timerDisplay.className = 'timer';
+        updateProgressBar();
+
+        gameState.timerInterval = setInterval(() => {
+            gameState.timeRemaining--;
+            elements.timerValue.textContent = gameState.timeRemaining;
+            updateProgressBar();
+
+            if (gameState.timeRemaining <= 10) elements.timerDisplay.className = 'timer warning';
+            if (gameState.timeRemaining <= 5) elements.timerDisplay.className = 'timer danger';
+            if (gameState.timeRemaining <= 0) {
+                clearInterval(gameState.timerInterval);
+                gameState.players[gameState.currentPlayerIndex].score -= 2;
+                moveToNextPlayer();
+            }
+        }, 1000);
+    }
+
+    // Update progress bar
+    function updateProgressBar() {
+        const percentage = (gameState.timeRemaining / gameState.timeLimit) * 100;
+        elements.progressBar.style.width = `${percentage}%`;
+    }
+
+    // Add player
+    function addPlayer() {
+        const name = elements.playerNameInput.value.trim();
+        if (!name || gameState.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+            alert(gameState.players.some(p => p.name.toLowerCase() === name.toLowerCase()) ? 'Player already exists!' : 'Enter a name!');
+            return;
+        }
+        gameState.players.push({ name, score: 0, id: Date.now().toString() });
+        elements.playerList.innerHTML = gameState.players.map(p => `
+            <div class="player">${p.name} <button class="remove-btn" data-id="${p.id}">×</button></div>
+        `).join('');
+        elements.playerNameInput.value = '';
+        elements.startGameBtn.disabled = gameState.players.length < 2;
+
+        document.querySelectorAll('.remove-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const playerId = e.target.getAttribute('data-id');
+                gameState.players = gameState.players.filter(p => p.id !== playerId);
+                addPlayer(); // Re-render
+            });
+        });
+    }
+
+    // Start game
+    function startGame() {
+        if (gameState.players.length < 2) {
+            alert('Need at least 2 players!');
+            return;
+        }
+        gameState.round = 1;
+        gameState.wordChain = [starterWords[Math.floor(Math.random() * starterWords.length)]];
+        gameState.currentPlayerIndex = gameState.startingPlayerOffset; // Start with offset
+        gameState.players.forEach(p => p.score = 0);
+
+        elements.setupArea.style.display = 'none';
+        elements.gameArea.style.display = 'block';
+        elements.gameResults.style.display = 'none';
+
+        updateGameDisplay();
+        startTimer();
+    }
+
+    // Submit word
+    function submitWord() {
+        const word = elements.wordInput.value.trim().toLowerCase();
+        if (!word) {
+            alert('Enter a word!');
+            return;
+        }
+        if (gameState.wordChain.includes(word)) {
+            alert('Word already used!');
+            return;
+        }
+        gameState.wordChain.push(word);
+        gameState.players[gameState.currentPlayerIndex].score += 1;
+        elements.wordInput.value = '';
+        moveToNextPlayer();
+    }
+
+    // Challenge word
+    function challengeWord() {
+        if (gameState.wordChain.length < 2 || gameState.challengeInProgress) return;
+        gameState.challengeInProgress = true;
+        clearInterval(gameState.timerInterval);
+        gameState.votes = {};
+
+        const lastWords = gameState.wordChain.slice(-2);
+        const challengerIndex = gameState.currentPlayerIndex;
+        const challengedPlayerIndex = (gameState.currentPlayerIndex - 1 + gameState.players.length) % gameState.players.length;
+
+        // Auto-vote
+        gameState.votes[challengerIndex] = false; // Challenger auto-votes Reject
+        gameState.votes[challengedPlayerIndex] = true; // Challenged auto-votes Accept
+
+        const overlay = document.createElement('div');
+        overlay.className = 'voting-overlay';
+        overlay.innerHTML = `
+            <div class="voting-card">
+                <h3>Challenge Vote</h3>
+                <div class="challenge-words">
+                    <div class="word">${lastWords[0]}</div>
+                    <div class="arrow">➡️</div>
+                    <div class="word contested">${lastWords[1]}</div>
+                </div>
+                <div class="vote-question">${gameState.players[challengedPlayerIndex].name} played "${lastWords[1]}" after "${lastWords[0]}". Is it related?</div>
+                <div class="hint-players-list">
+                    ${gameState.players.map((p, i) => `
+                        <div class="hint-player-option" data-index="${i}">
+                            ${p.name} 
+                            ${i === challengerIndex ? '<span>(Auto: No)</span>' : 
+                              i === challengedPlayerIndex ? '<span>(Auto: Yes)</span>' : 
+                              `<button class="vote-btn btn-success" data-vote="accept" data-index="${i}">Yes</button>
+                               <button class="vote-btn btn-danger" data-vote="reject" data-index="${i}">No</button>`}
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="btn-warning" id="submit-votes">Submit Votes</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        // Handle voting for non-auto voters
+        document.querySelectorAll('.vote-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const playerIndex = parseInt(e.target.getAttribute('data-index'));
+                const vote = e.target.getAttribute('data-vote');
+                gameState.votes[playerIndex] = vote === 'accept';
+                e.target.style.opacity = '0.5';
+                e.target.disabled = true;
+                const siblingBtn = e.target.parentElement.querySelector(`.vote-btn:not([data-index="${playerIndex}"])`);
+                if (siblingBtn) siblingBtn.disabled = true;
+            });
+        });
+
+        document.getElementById('submit-votes').addEventListener('click', () => {
+            const totalVotes = Object.keys(gameState.votes).length;
+            if (totalVotes < gameState.players.length) {
+                alert('Waiting for all players to vote!');
+                return;
+            }
+
+            const acceptVotes = Object.values(gameState.votes).filter(v => v).length;
+            const rejectVotes = totalVotes - acceptVotes;
+            const majorityThreshold = Math.ceil(gameState.players.length / 2);
+
+            if (acceptVotes > rejectVotes) { // Word accepted
+                if (acceptVotes >= majorityThreshold) {
+                    gameState.players[challengerIndex].score -= 2; // Doubled penalty
+                } // Tie or minority: no penalty
+            } else if (rejectVotes > acceptVotes) { // Word rejected
+                gameState.wordChain.pop();
+                if (rejectVotes >= majorityThreshold) {
+                    gameState.players[challengedPlayerIndex].score -= 4; // Doubled penalty
+                } else {
+                    gameState.players[challengedPlayerIndex].score -= 2;
+                }
+            } // Tie: word stays, no penalty to challenger
+
+            gameState.challengeInProgress = false;
+            document.body.removeChild(overlay);
+            updateGameDisplay();
+            startTimer();
+        });
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                alert('Please complete the vote!');
+            }
+        });
+    }
+
+    // Get hint
+    function getHint() {
+        if (!gameState.hintsEnabled || gameState.players.length < 3 || gameState.hintInProgress) return;
+        gameState.hintInProgress = true;
+        clearInterval(gameState.timerInterval);
+
+        const lastWord = gameState.wordChain[gameState.wordChain.length - 1];
+        const overlay = document.createElement('div');
+        overlay.className = 'voting-overlay';
+        overlay.innerHTML = `
+            <div class="voting-card">
+                <h3>Get Hint</h3>
+                <div class="vote-question">Choose a player to give a hint for "${lastWord}"</div>
+                <div class="hint-players-list">
+                    ${gameState.players
+                        .map((p, i) => i !== gameState.currentPlayerIndex ? `<div class="hint-player-option" data-index="${i}">${p.name}</div>` : '')
+                        .join('')}
+                </div>
+                <button class="btn-danger" id="cancel-hint">Cancel</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        document.querySelectorAll('.hint-player-option').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const hintPlayerIndex = parseInt(e.target.getAttribute('data-index'));
+                const hint = prompt(`${gameState.players[hintPlayerIndex].name}, give a hint for a word related to "${lastWord}"`);
+                if (hint) {
+                    gameState.players[hintPlayerIndex].score += 1;
+                    elements.hintContainer.style.display = 'block';
+                    elements.hintText.textContent = `Hint from ${gameState.players[hintPlayerIndex].name}: ${hint}`;
+                    setTimeout(() => elements.hintContainer.style.display = 'none', 10000);
+                }
+                gameState.hintInProgress = false;
+                document.body.removeChild(overlay);
+                updateGameDisplay();
+                startTimer();
+            });
+        });
+
+        document.getElementById('cancel-hint').addEventListener('click', () => {
+            gameState.hintInProgress = false;
+            document.body.removeChild(overlay);
+            startTimer();
+        });
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                gameState.hintInProgress = false;
+                document.body.removeChild(overlay);
+                startTimer();
+            }
+        });
+    }
+
+    // Pass turn
+    function passTurn() {
+        gameState.players[gameState.currentPlayerIndex].score -= 1;
+        moveToNextPlayer();
+    }
+
+    // Move to next player
+    function moveToNextPlayer() {
+        gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
+        if (gameState.currentPlayerIndex === gameState.startingPlayerOffset) {
+            gameState.round++;
+            if (gameState.round > gameState.maxRounds) {
+                endGame();
+                return;
+            }
+            // Reset word chain with a new random starter word
+            gameState.wordChain = [starterWords[Math.floor(Math.random() * starterWords.length)]];
+            // Rotate starting player
+            gameState.startingPlayerOffset = (gameState.startingPlayerOffset + 1) % gameState.players.length;
+            gameState.currentPlayerIndex = gameState.startingPlayerOffset;
+        }
+        elements.wordInput.value = '';
+        updateGameDisplay();
+        startTimer();
+    }
+
+    // End game
+    function endGame() {
+        clearInterval(gameState.timerInterval);
+        elements.gameArea.style.display = 'none';
+        elements.gameResults.style.display = 'block';
+
+        const sortedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
+        elements.winnerDisplay.textContent = `🏆 ${sortedPlayers[0].name} Wins! 🏆`;
+        elements.finalScoreboard.innerHTML = sortedPlayers.map((p, i) => `
+            <div class="scoreboard-item${i === 0 ? ' winner' : ''}">
+                <div>${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i > 2 ? '👍': ''} ${p.name}</div>
+                <div>${p.score} points</div>
+            </div>
+        `).join('');
+        showConfetti();
+    }
+
+    // Show confetti
+    function showConfetti() {
+        elements.confettiContainer.style.display = 'block';
+        for (let i = 0; i < 100; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            const left = Math.random() * 100;
+            const width = Math.random() * 10 + 5;
+            const height = Math.random() * 10 + 5;
+            const duration = Math.random() * 3 + 2;
+            const delay = Math.random() * 5;
+            const colors = ['#5e60ce', '#6930c3', '#48bfe3', '#64dfdf', '#20c997'];
+            confetti.style.left = `${left}%`;
+            confetti.style.width = `${width}px`;
+            confetti.style.height = `${height}px`;
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.animationDuration = `${duration}s`;
+            confetti.style.animationDelay = `${delay}s`;
+            elements.confettiContainer.appendChild(confetti);
+        }
+        setTimeout(() => {
+            elements.confettiContainer.style.display = 'none';
+            elements.confettiContainer.innerHTML = '';
+        }, 8000);
+    }
+
+    // Reset game
+    function resetGame() {
+        elements.gameResults.style.display = 'none';
+        elements.setupArea.style.display = 'block';
+        elements.confettiContainer.style.display = 'none';
+        elements.confettiContainer.innerHTML = '';
+        resetGameState();
+        elements.playerList.innerHTML = '';
+        elements.startGameBtn.disabled = true;
+    }
+
+    // Toggle theme
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        elements.themeSwitcher.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+    }
+    </script>
+</body>
+</html>
